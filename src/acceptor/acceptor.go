@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 )
-type acceptorImp struct {
+type AcceptorImp struct {
 	Listener chan *util.Comm
 }
 
@@ -15,26 +15,34 @@ type AcceptorPayload struct {
 }
 
 
-func (a *acceptorImp) Start() {
+func (a *AcceptorImp) Start() {
 	go func() {
 		for {
 			select {
 			case message := <-a.Listener:
-				a.Receive(message.Payload, message.ResponseChan)
+				if message.FunctionExecutor == util.Propose {
+					a.Propose(message.Payload, message.ResponseChan)
+				} else {
+					message.ResponseChan <- "Error. No such function"
+				}
 			}
 		}
 	}()
 }
 
-func NewAcceptor() *acceptorImp {
-	return &acceptorImp{make(chan *util.Comm, 100), make(chan struct{})}
+func NewAcceptor() *AcceptorImp {
+	return &AcceptorImp{make(chan *util.Comm, 100)}
 }
 
-func (a *acceptorImp) Receive(payload interface{}, responseChan chan interface{}) {
-	v := reflect.ValueOf(payload)
-	request := v.Interface().(*AcceptorPayload)
-	fmt.Printf("Acceptor request: Ballot: %d, Slot: %d Command: %s\n", request.Ballot, request.Slot, request.Command)
-	responseStr := fmt.Sprintf("Ballot: %d, Slot: %d Command: %s", request.Ballot, request.Slot, request.Command)
-	responseChan <- responseStr
+func (a *AcceptorImp) Propose(payload interface{}, responseChan chan interface{}) {
+	proposal := reflect.ValueOf(payload).Interface().(*util.LeaderProposal)
+	fmt.Printf("A: A <- L: Ballot: %d, Slot: %d Command: %s\n", proposal.Ballot, proposal.Slot, proposal.Command)
+	responseChan <- "Acceptor success"
 }
+
+func (l *AcceptorImp) Send(message *util.Comm) {
+	l.Listener <- message
+}
+
+
 
