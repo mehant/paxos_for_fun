@@ -13,5 +13,5 @@ func main() {
 	l1 := leader.NewLeader([]util.Sender{a1})
 	l1.Start()
 	r1 := replica.NewReplica([]util.Sender{l1})
-	r1.Start()
+	r1.Propose("K: v")
 }

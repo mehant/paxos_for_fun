@@ -23,7 +23,7 @@ func (l *LeaderImp) Start() {
 			case message := <- l.listener:
 				functionExecutor := message.FunctionExecutor
 				// Dispatch the appropriate function
-				if functionExecutor == util.Propose {
+				if functionExecutor == util.ProposeFunc {
 					l.Propose(message.Payload, message.ResponseChan)
 				} else {
 					message.ResponseChan <- "ERROR: No such function"
@@ -39,7 +39,7 @@ func (l *LeaderImp) Propose(payload interface{}, response chan interface{}) {
 	leaderResponse := make(chan interface{})
 	leaderProposal := &util.LeaderProposal{proposal, 5}
 	fmt.Printf("L: A <- L :%+v\n", leaderProposal)
-	l.acceptors[0].Send(&util.Comm{leaderProposal, util.Propose, leaderResponse})
+	l.acceptors[0].Send(&util.Comm{leaderProposal, util.ProposeFunc, leaderResponse})
 	acceptorResponse := <-leaderResponse
 	fmt.Printf("L: L <- A: %s\n", acceptorResponse)
 	response <- acceptorResponse
